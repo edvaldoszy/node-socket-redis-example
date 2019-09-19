@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.slim.js" integrity="sha256-RtMTraB5gGlLER0FkKBcaXCmZCQCxkKS/dXm7MSEoEY=" crossorigin="anonymous"></script>
+    <script>
+        (function (window) {
+            function mapper(part) {
+                return /([^&=]+)=?([^&]*)/g.exec(part);
+            }
+
+            function reducer(object, item) {
+                const key = item[1];
+                const value = item[2];
+
+                return Object.assign(object, { [key]: value });
+            }
+
+            function parseQueryString(str) {
+                const url = decodeURI(str)
+                    .replace(/^.*\?/, '');
+
+                const params = url.split('&')
+                    .filter(part => part.trim() !== '')
+                    .map(mapper)
+                    .reduce(reducer, {});
+
+                return params;
+            }
+
+            window.parseQueryString = parseQueryString;
+        })(window);
+
+        window.onload = () => {
+
+            const { server } = parseQueryString(window.location.search);
+            if (!server) {
+                return;
+            }
+
+            const client = io(server);
+            client.on('connect', () => {
+                console.log('Estou conectado');
+            });
+
+            client.on('chat', message => {
+                console.log('Message received from server', message);
+            });
+
+            window.sendMessage = message => {
+                client.emit('chat', message);
+            };
+        };
+
+    </script>
+</body>
+</html>
