@@ -5,8 +5,11 @@ const socket = require('socket.io');
 const app = require('./app');
 const chatController = require('./controllers/chat-controller');
 
+const { NODE_ENV, PORT = '3000' } = process.env;
+const port = parseInt(PORT);
 
-if (cluster.isMaster) {
+
+if (cluster.isMaster && NODE_ENV === 'production') {
     console.log(`Master ${process.pid} is running`);
 
     // Fork workers.
@@ -25,5 +28,5 @@ if (cluster.isMaster) {
     const srv = createServer(app);
     chatController(socket(srv));
 
-    srv.listen(3000, _ => console.log(`Worker ${process.pid} started at port 3000`));
+    srv.listen(port, _ => console.log(`Worker ${process.pid} started at port ${port}`));
 }
