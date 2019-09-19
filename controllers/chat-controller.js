@@ -1,5 +1,6 @@
 const redis = require('redis');
 
+const { pid } = process;
 
 
 function controller(io) {
@@ -11,7 +12,7 @@ function controller(io) {
 
 
     function onServerMessageReceived(data) {
-        console.log('Message received from servers', data);
+        console.log(`[${pid}] Message received from servers ${data}`);
         const { from, to, message } = data;
 
         const user = users[to];
@@ -23,19 +24,19 @@ function controller(io) {
     }
 
     function onClientMessageReceived({ from, to, message }) {
-        console.log('Message received from client', { from, to, message });
+        console.log(`[${pid}] Message received from client ${JSON.stringify({ from, to, message })}`);
 
         const user = users[to];
         if (!user) {
             // O usuário não está conectar neste nó
             // publica no canal do Redis
             pub.publish('servers', JSON.stringify({ from, to, message }));
-            console.log('Sent message to servers');
+            console.log(`[${pid}] Sent message to servers`);
         } else {
             // O usuário está conectado no mesmo nó
             // faz o emit diretamente para o socket
             user.emit('chat', message);
-            console.log('Sent message to client');
+            console.log(`[${pid}] Sent message to client`);
         }
     }
 
@@ -50,7 +51,7 @@ function controller(io) {
 
         client.on('chat', onClientMessageReceived);
 
-        console.log('Client connected', client.id);
+        console.log(`[${pid}] Client connected ${client.id}`);
         users[client.id] = client;
     });
 }
